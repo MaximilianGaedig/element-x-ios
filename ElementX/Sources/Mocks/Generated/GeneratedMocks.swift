@@ -15032,6 +15032,11 @@ nonisolated class UserSessionMock: UserSessionProtocol, @unchecked Sendable {
         set(value) { underlyingUserSettings = value }
     }
     nonisolated(unsafe) var underlyingUserSettings: UserSettings!
+    var userHooks: UserHooks {
+        get { return underlyingUserHooks }
+        set(value) { underlyingUserHooks = value }
+    }
+    nonisolated(unsafe) var underlyingUserHooks: UserHooks!
     var mediaProvider: MediaProviderProtocol {
         get { return underlyingMediaProvider }
         set(value) { underlyingMediaProvider = value }
