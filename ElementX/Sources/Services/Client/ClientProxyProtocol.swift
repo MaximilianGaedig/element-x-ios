@@ -123,6 +123,9 @@ protocol ClientProxyProtocol: AnyObject {
     
     var homeserver: String { get }
     
+    /// Our tuwunel fork's `im.mxg.*` endpoints with this session's token (Tunes fork).
+    var imxg: ImxgAPIProtocol { get }
+    
     var canDeactivateAccount: Bool { get }
     
     var userIDServerName: String? { get }

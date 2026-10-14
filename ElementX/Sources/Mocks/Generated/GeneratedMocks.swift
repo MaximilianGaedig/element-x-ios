@@ -2423,6 +2423,11 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         set(value) { underlyingHomeserver = value }
     }
     nonisolated(unsafe) var underlyingHomeserver: String!
+    var imxg: ImxgAPIProtocol {
+        get { return underlyingImxg }
+        set(value) { underlyingImxg = value }
+    }
+    nonisolated(unsafe) var underlyingImxg: ImxgAPIProtocol!
     var canDeactivateAccount: Bool {
         get { return underlyingCanDeactivateAccount }
         set(value) { underlyingCanDeactivateAccount = value }

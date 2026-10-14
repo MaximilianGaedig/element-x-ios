@@ -314,6 +314,15 @@ class ClientProxy: ClientProxyProtocol {
         }
         
         liveLocationOwnInfoUpdatesListenerTaskHandle = createLiveLocationOwnInfoUpdatesObserver()
+        
+        // Primes the im.mxg feature cache and records what this homeserver offers.
+        Task { [imxg] in
+            var supported: [String] = []
+            for feature in ImxgFeature.allCases {
+                if await imxg.supports(feature) { supported.append(feature.rawValue) }
+            }
+            MXLog.info("im.mxg features: \(supported.isEmpty ? "none" : supported.joined(separator: ", "))")
+        }
     }
     
     var userID: String {
@@ -337,6 +346,8 @@ class ClientProxy: ClientProxyProtocol {
     var homeserver: String {
         client.homeserver()
     }
+    
+    private(set) lazy var imxg: ImxgAPIProtocol = ImxgAPI(client: client)
     
     var canDeactivateAccount: Bool {
         client.canDeactivateAccount()

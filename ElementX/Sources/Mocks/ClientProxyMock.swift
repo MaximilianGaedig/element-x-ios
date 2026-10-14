@@ -57,6 +57,8 @@ extension ClientProxyMock {
         
         homeserver = configuration.homeserver
         userIDServerName = configuration.userIDServerName
+        // No session: every im.mxg call fails with `.noSession`, so screens use their fallbacks.
+        imxg = ImxgAPI(credentials: { throw ImxgError.noSession }, refreshToken: { })
         
         totalUnreadNotifications = configuration.totalUnreadNotifications
         
