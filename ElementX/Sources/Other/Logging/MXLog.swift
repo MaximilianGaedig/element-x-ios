@@ -120,7 +120,7 @@ nonisolated enum MXLog {
         }
         
         logEvent(file: (file as NSString).lastPathComponent, line: UInt32(line), level: level.rustLogLevel, target: currentTarget, message: "\(message)")
-        if let hostSink, level != .verbose, level != .debug {
+        if let hostSink, level != .trace, level != .debug {
             hostSink("\(level) \((file as NSString).lastPathComponent):\(line) \(message)")
         }
     }
