@@ -120,5 +120,12 @@ nonisolated enum MXLog {
         }
         
         logEvent(file: (file as NSString).lastPathComponent, line: UInt32(line), level: level.rustLogLevel, target: currentTarget, message: "\(message)")
+        if let hostSink, level != .verbose, level != .debug {
+            hostSink("\(level) \((file as NSString).lastPathComponent):\(line) \(message)")
+        }
     }
+    
+    /// Set by a host app embedding Element X (`ElementXEmbedded.log`): a copy of each info-or-above line, for the
+    /// host's own log, since the files Element X writes sit in the app group container.
+    nonisolated(unsafe) static var hostSink: ((String) -> Void)?
 }

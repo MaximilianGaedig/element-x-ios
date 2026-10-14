@@ -21,6 +21,12 @@ public enum ElementXEmbedded {
     private static let appDelegate = AppDelegate()
     private static var hasStarted = false
     
+    /// Receives a copy of Element X's log lines (info and above, from any thread) for the host's own log.
+    public static var log: ((String) -> Void)? {
+        get { MXLog.hostSink }
+        set { MXLog.hostSink = newValue }
+    }
+    
     /// Called once with how long creating Element X took (on the main thread, on first use), for the host's log.
     public static var didCreate: ((Duration) -> Void)?
     
