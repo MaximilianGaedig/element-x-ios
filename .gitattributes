@@ -1,7 +1,6 @@
-UITests/Sources/__Snapshots__/** filter=lfs diff=lfs merge=lfs -text
-Components/DevelopmentAssets/Media/** filter=lfs diff=lfs merge=lfs -text
-UnitTests/__Snapshots__/** filter=lfs diff=lfs merge=lfs -text
-PreviewTests/Sources/__Snapshots__/** filter=lfs diff=lfs merge=lfs -text
-compound-ios/Tests/CompoundTests/__Snapshots__/** filter=lfs diff=lfs merge=lfs -text
+# Fork (branch tunes): no LFS filters, so SwiftPM can check this package out without git-lfs. The snapshots and
+# development media stay LFS pointer files here; upstream's attributes were:
+#   UITests/Sources/__Snapshots__/** Components/DevelopmentAssets/Media/** UnitTests/__Snapshots__/**
+#   PreviewTests/Sources/__Snapshots__/** compound-ios/Tests/CompoundTests/__Snapshots__/** filter=lfs diff=lfs merge=lfs -text
 
 Package.resolved -linguist-generated
