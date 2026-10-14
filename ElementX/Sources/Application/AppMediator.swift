@@ -26,7 +26,7 @@ class AppMediator: AppMediatorProtocol {
     var appState: UIApplication.State {
         switch application.applicationState {
         case .active:
-            windowManager.mainWindow.traitCollection.activeAppearance == .active ? .active : .inactive
+            windowManager.mainWindow?.traitCollection.activeAppearance == .inactive ? .inactive : .active
         case .inactive:
             .inactive
         case .background:

@@ -29,8 +29,10 @@ class WindowManager: SecureWindowManagerProtocol {
         }
     }
     
+    /// The windows set up so far. Embedded (`ElementXEmbedded`), the root view reads this (to apply the appearance)
+    /// before it has reported its window, when none exist yet.
     var windows: [UIWindow] {
-        [mainWindow, overlayWindow, alternateWindow]
+        ([mainWindow, overlayWindow, alternateWindow] as [UIWindow?]).compactMap { $0 }
     }
     
     /// The task used to switch windows, so that we don't get stuck in the wrong state with a quick switch.
