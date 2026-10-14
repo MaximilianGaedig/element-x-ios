@@ -6,3 +6,6 @@ entitlementsPath: ElementXStandalone.entitlements
 # Tools/Scripts/build-resources-bundle.sh .resources (build.sh runs it).
 resources:
   - .resources/ElementXResources.bundle
+# libwebrtc (calls) has Objective-C categories in a static library: only -ObjC loads them, as in the Xcode target.
+linkerFlags:
+  - -ObjC
