@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>io.element.elementx.background.refresh</string>
+		<string>io.element.elementx.background.search-backfill</string>
+	</array>
+	<key>CFBundleDisplayName</key>
+	<string>Element X</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Mention Pills</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<string>sh.mxg.element.pills</string>
+		</dict>
+	</array>
+	<key>CFBundleShortVersionString</key>
+	<string>26.10.2</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>Application</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>sh.mxg.element</string>
+				<string>matrix</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>To take pictures or videos and send them as a message Element X needs access to the camera.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Face ID is used to access your app.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>To share your live location, Element X needs location access when the app is in the background.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Grant location access so that Element X can share your location.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>To record and send messages with audio, Element X needs to access the microphone.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This lets you save images and videos to your photo library.</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>INSendMessageIntent</string>
+		<string>INStartCallIntent</string>
+	</array>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<true/>
+	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>fetch</string>
+		<string>processing</string>
+		<string>voip</string>
+		<string>location</string>
+	</array>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.text</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Mention Pills</string>
+			<key>UTTypeIdentifier</key>
+			<string>sh.mxg.element.pills</string>
+		</dict>
+	</array>
+	<key>appGroupIdentifier</key>
+	<string>group.$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>baseBundleIdentifier</key>
+	<string>sh.mxg.element</string>
+	<key>classicAppDeepLinkURL</key>
+	<string>element://open</string>
+	<key>classicAppGroupIdentifier</key>
+	<string>group.im.vector</string>
+	<key>classicAppKeychainAccessGroupIdentifier</key>
+	<string></string>
+	<key>classicAppKeychainServiceIdentifier</key>
+	<string>im.vector.app.encryption-manager-service</string>
+	<key>isNightlyBuild</key>
+	<string>NO</string>
+	<key>keychainAccessGroupIdentifier</key>
+	<string></string>
+	<key>productionAppName</key>
+	<string>Element</string>
+</dict>
+</plist>

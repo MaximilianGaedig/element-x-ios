@@ -37,8 +37,14 @@ final nonisolated class KeychainController: KeychainControllerProtocol {
     }
     
     init(service: KeychainControllerService, accessGroup: String) {
-        restorationTokenKeychain = Keychain(service: service.restorationTokenID, accessGroup: accessGroup)
-        mainKeychain = Keychain(service: service.mainID, accessGroup: accessGroup)
+        if accessGroup.isEmpty {
+            // The app's default access group (hosts that cannot know their team prefix at build time).
+            restorationTokenKeychain = Keychain(service: service.restorationTokenID)
+            mainKeychain = Keychain(service: service.mainID)
+        } else {
+            restorationTokenKeychain = Keychain(service: service.restorationTokenID, accessGroup: accessGroup)
+            mainKeychain = Keychain(service: service.mainID, accessGroup: accessGroup)
+        }
     }
     
     // MARK: - Restoration Tokens

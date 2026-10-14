@@ -23,6 +23,11 @@ public nonisolated extension Bundle {
         return bundle
     }
     
+    /// The bundle with the app's compiled resources (asset catalog, localisations, sounds): the app bundle itself,
+    /// or `ElementXResources.bundle` inside it when a SwiftPM host (the xtool build, Tunes) links ElementX as a library.
+    static let elementXResources: Bundle = Bundle.app.url(forResource: "ElementXResources", withExtension: "bundle")
+        .flatMap(Bundle.init(url:)) ?? Bundle.app
+    
     // MARK: - Localisation
     
     /// Overrides `Bundle.app.preferredLocalizations` for testing translations since this is
@@ -39,7 +44,7 @@ public nonisolated extension Bundle {
             return bundle
         }
         
-        guard let lprojURL = Bundle.app.url(forResource: language, withExtension: "lproj") else {
+        guard let lprojURL = Bundle.elementXResources.url(forResource: language, withExtension: "lproj") else {
             return nil
         }
         

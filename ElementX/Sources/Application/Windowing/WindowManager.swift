@@ -71,6 +71,29 @@ class WindowManager: SecureWindowManagerProtocol {
         mainWindow = scene.keyWindow ?? scene.windows.first
         mainWindow.tintColor = .compound.textActionPrimary
         
+        setUpOverlayAndAlternateWindows(in: scene)
+    }
+    
+    /// Element X inside a host app's window (`ElementXEmbedded`): the host owns the scene and its window, which is
+    /// used as the main window as is (its tint stays the host's).
+    func configure(embeddedIn window: UIWindow) {
+        guard let scene = window.windowScene else { return }
+        if mainWindow === window {
+            overlayWindow.isHidden = false
+            return
+        }
+        
+        mainScene = scene
+        mainWindow = window
+        setUpOverlayAndAlternateWindows(in: scene)
+    }
+    
+    /// Hides the overlay (toasts, indicators) while a host shows something other than Element X.
+    func setEmbeddedOverlayHidden(_ hidden: Bool) {
+        overlayWindow?.isHidden = hidden
+    }
+    
+    private func setUpOverlayAndAlternateWindows(in scene: UIWindowScene) {
         overlayWindow = PassthroughWindow(windowScene: scene)
         overlayWindow.tintColor = .compound.textActionPrimary
         overlayWindow.backgroundColor = .clear

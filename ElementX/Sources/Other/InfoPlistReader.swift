@@ -29,6 +29,9 @@ nonisolated struct InfoPlistReader {
         static let classicAppKeychainServiceIdentifier = "classicAppKeychainServiceIdentifier"
         static let classicAppKeychainAccessGroupIdentifier = "classicAppKeychainAccessGroupIdentifier"
         static let classicAppDeepLinkURL = "classicAppDeepLinkURL"
+        
+        static let containerSubdirectory = "elementXContainerSubdirectory"
+        static let userDefaultsSuiteName = "elementXUserDefaultsSuiteName"
     }
     
     private enum Values {
@@ -51,7 +54,7 @@ nonisolated struct InfoPlistReader {
     
     /// App group identifier set in Info.plist of the target
     var appGroupIdentifier: String {
-        infoPlistValue(forKey: Keys.appGroupIdentifier)
+        expandingBundleIdentifier(infoPlistValue(forKey: Keys.appGroupIdentifier))
     }
     
     /// Base bundle identifier set in Info.plist of the target
@@ -59,9 +62,21 @@ nonisolated struct InfoPlistReader {
         infoPlistValue(forKey: Keys.baseBundleIdentifier)
     }
     
-    /// Keychain access group identifier set in Info.plist of the target
+    /// Hosts embedding Element X (sharing their app group with their own data) set this so Element X keeps its files in
+    /// that subdirectory of the group container and leaves the host's temporary files alone.
+    var containerSubdirectory: String? {
+        infoPlistValue(forKey: Keys.containerSubdirectory)
+    }
+    
+    /// The UserDefaults suite for Element X's settings, when not the app group's (whose suite a host shares: Element X
+    /// resets its whole suite on a fresh install).
+    var userDefaultsSuiteName: String {
+        infoPlistValue(forKey: Keys.userDefaultsSuiteName) ?? appGroupIdentifier
+    }
+    
+    /// Keychain access group identifier set in Info.plist of the target. Empty means the app's default group.
     var keychainAccessGroupIdentifier: String {
-        infoPlistValue(forKey: Keys.keychainAccessGroupIdentifier)
+        expandingBundleIdentifier(infoPlistValue(forKey: Keys.keychainAccessGroupIdentifier))
     }
     
     /// Bundle executable of the target
@@ -143,6 +158,12 @@ nonisolated struct InfoPlistReader {
     }
     
     // MARK: - Private
+    
+    /// SwiftPM hosts (xtool) can rewrite the bundle identifier when signing, so their Info.plist refers to it as
+    /// `$(PRODUCT_BUNDLE_IDENTIFIER)` (e.g. `group.$(PRODUCT_BUNDLE_IDENTIFIER)`), resolved here at runtime.
+    private func expandingBundleIdentifier(_ value: String) -> String {
+        value.replacingOccurrences(of: "$(PRODUCT_BUNDLE_IDENTIFIER)", with: bundleIdentifier)
+    }
     
     @_disfavoredOverload // Make sure optional types default to the optional version below.
     private func infoPlistValue<T>(forKey key: String) -> T {

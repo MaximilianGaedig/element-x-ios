@@ -265,7 +265,7 @@ nonisolated struct NotificationToneManager: NotificationToneManagerProtocol {
     private static let systemLocation = URL.systemSoundsDirectory
     
     private static let bundledLocation: URL = {
-        guard let url = Bundle.app.resourceURL else {
+        guard let url = Bundle.elementXResources.resourceURL else {
             fatalError("The app is seriously corrupt if resourceURL is missing.")
         }
         return url

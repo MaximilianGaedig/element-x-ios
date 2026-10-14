@@ -37,7 +37,7 @@ nonisolated enum AppBuildType {
 ///
 /// State is persisted in `UserDefaults`, which is thread-safe per Apple's documentation, hence `@unchecked`.
 final nonisolated class AppSettings: @unchecked Sendable {
-    static let suiteName: String = InfoPlistReader.main.appGroupIdentifier
+    static let suiteName: String = InfoPlistReader.main.userDefaultsSuiteName
     
     /// UserDefaults to be used on reads and writes.
     private let store: UserDefaultsProtocol

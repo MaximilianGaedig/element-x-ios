@@ -1,0 +1,8 @@
+version: 1
+bundleID: sh.mxg.element
+product: ElementXStandalone
+infoPath: Info.plist
+entitlementsPath: ElementXStandalone.entitlements
+# Tools/Scripts/build-resources-bundle.sh .resources (build.sh runs it).
+resources:
+  - .resources/ElementXResources.bundle

@@ -6,6 +6,8 @@ xcassets:
   outputs:
     templateName: swift5
     output: Assets.swift
+    params:
+      bundle: Bundle.elementXResources
 strings:
   - inputs: Resources/Localizations/en.lproj
     filter: Localizable*

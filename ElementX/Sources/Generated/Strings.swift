@@ -4303,14 +4303,14 @@ internal nonisolated enum L10n {
 nonisolated extension L10n {
   static func tr(_ table: String, _ key: String, _ args: CVarArg...) -> String {
     // Use preferredLocalizations to get a language that is in the bundle and the user's preferred list of languages.
-    let languages = Bundle.overrideLocalizations ?? Bundle.app.preferredLocalizations
+    let languages = Bundle.overrideLocalizations ?? Bundle.elementXResources.preferredLocalizations
 
     for language in languages {
       if let translation = trIn(language, table, key, args) {
         return translation
       }
     }
-    return Bundle.app.developmentLocalization.flatMap { trIn($0, table, key, args) } ?? key
+    return Bundle.elementXResources.developmentLocalization.flatMap { trIn($0, table, key, args) } ?? key
   }
 
   private static func trIn(_ language: String, _ table: String, _ key: String, _ args: CVarArg...) -> String? {

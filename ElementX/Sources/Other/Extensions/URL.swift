@@ -22,6 +22,10 @@ nonisolated extension URL {
             return URL.applicationSupportDirectory.deletingLastPathComponent().deletingLastPathComponent()
         }
         
+        if let subdirectory = InfoPlistReader.main.containerSubdirectory {
+            return url.appending(component: subdirectory, directoryHint: .isDirectory)
+        }
+        
         return url
     }
     

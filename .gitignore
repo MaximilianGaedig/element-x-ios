@@ -39,3 +39,10 @@ Components/Secrets/vendor/*
 
 # Local SDK development override
 matrix-rust-components-swift
+
+# xtool standalone build (StandaloneApp)
+StandaloneApp/.build/
+StandaloneApp/.bsp/
+StandaloneApp/.resources/
+StandaloneApp/xtool/
+StandaloneApp/*.log

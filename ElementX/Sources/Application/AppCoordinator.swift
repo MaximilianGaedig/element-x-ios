@@ -563,7 +563,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     
     /// This could be removed once the adoption of 25.06.x is widespread.
     private func performSettingsToAccountDataMigration(userSession: UserSessionProtocol) {
-        guard let userDefaults = UserDefaults(suiteName: InfoPlistReader.main.appGroupIdentifier) else {
+        guard let userDefaults = UserDefaults(suiteName: InfoPlistReader.main.userDefaultsSuiteName) else {
             return
         }
         
@@ -621,19 +621,21 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     ///
     /// **Note:** If there is a single file we consider it to be an active share payload and ignore it.
     private func clearTemporaryDirectories() {
-        // First get rid of everything in the App's temporary directory
-        do {
-            let fileURLs = try FileManager.default.contentsOfDirectory(at: URL.temporaryDirectory, includingPropertiesForKeys: nil, options: [])
-            
-            fileURLs.forEach { url in
-                do {
-                    try FileManager.default.removeItem(at: url)
-                } catch {
-                    MXLog.warning("Failed to remove file from temporary directory: \(error)")
+        // First get rid of everything in the App's temporary directory (unless it belongs to a host app too).
+        if InfoPlistReader.main.containerSubdirectory == nil {
+            do {
+                let fileURLs = try FileManager.default.contentsOfDirectory(at: URL.temporaryDirectory, includingPropertiesForKeys: nil, options: [])
+                
+                fileURLs.forEach { url in
+                    do {
+                        try FileManager.default.removeItem(at: url)
+                    } catch {
+                        MXLog.warning("Failed to remove file from temporary directory: \(error)")
+                    }
                 }
+            } catch {
+                MXLog.warning("Failed to enumerate temporary directory: \(error)")
             }
-        } catch {
-            MXLog.warning("Failed to enumerate temporary directory: \(error)")
         }
         
         // Manual clean to handle the potential case where the app crashes before moving a shared file.
