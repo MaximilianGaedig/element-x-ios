@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 /// Element X inside another app's window (e.g. Tunes, which builds ElementX as a SwiftPM library).
 ///
@@ -19,12 +20,42 @@ public enum ElementXEmbedded {
     private static var hasStarted = false
     
     /// Creates the app coordinator (settings, sessions, background tasks). Idempotent.
+    ///
+    /// The notification center's delegate stays the host's: the host forwards Element X's notifications with
+    /// `willPresent(_:)` and `didReceive(_:)`.
     public static func launch() {
         guard appCoordinator == nil else { return }
         _ = appDelegate.application(.shared, didFinishLaunchingWithOptions: nil)
+        let hostNotificationDelegate = UNUserNotificationCenter.current().delegate
         let appCoordinator = AppCoordinator(appDelegate: appDelegate)
+        if let hostNotificationDelegate {
+            UNUserNotificationCenter.current().delegate = hostNotificationDelegate
+        }
         SceneDelegate.windowManager = appCoordinator.windowManager
         self.appCoordinator = appCoordinator
+    }
+    
+    /// Whether a notification is one of Element X's (messages, invites).
+    public static func isElementXNotification(_ notification: UNNotification) -> Bool {
+        let userInfo = notification.request.content.userInfo
+        return userInfo[NotificationConstants.UserInfoKey.receiverIdentifier] != nil
+            || userInfo[NotificationConstants.UserInfoKey.roomIdentifier] != nil
+    }
+    
+    /// The presentation options for one of Element X's notifications while the app is in the foreground, nil for others.
+    public static func willPresent(_ notification: UNNotification) async -> UNNotificationPresentationOptions? {
+        guard isElementXNotification(notification),
+              let notificationManager = appCoordinator?.notificationManager as? NotificationManager else { return nil }
+        return await notificationManager.userNotificationCenter(.current(), willPresent: notification)
+    }
+    
+    /// Handles a response to one of Element X's notifications (opens the room, sends an inline reply). Returns false
+    /// for other notifications.
+    public static func didReceive(_ response: UNNotificationResponse) async -> Bool {
+        guard isElementXNotification(response.notification),
+              let notificationManager = appCoordinator?.notificationManager as? NotificationManager else { return false }
+        await notificationManager.userNotificationCenter(.current(), didReceive: response)
+        return true
     }
     
     /// Handles Element X's own URLs (matrix.to and `matrix:` permalinks, its custom routes). Returns false for others.
