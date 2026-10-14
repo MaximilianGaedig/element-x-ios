@@ -56,8 +56,13 @@ class LiveLocationManager: NSObject, LiveLocationManagerProtocol, CLLocationMana
         
         // Configure CLLocationManager for continuous background tracking.
         self.locationManager.delegate = self
-        self.locationManager.allowsBackgroundLocationUpdates = true
-        self.locationManager.showsBackgroundLocationIndicator = true
+        // CoreLocation throws if the app does not declare the `location` background mode, which a host app embedding
+        // Element X (ElementXEmbedded) may not: sharing then continues only while the app is in the foreground.
+        let backgroundModes = Bundle.main.object(forInfoDictionaryKey: "UIBackgroundModes") as? [String] ?? []
+        if backgroundModes.contains("location") {
+            self.locationManager.allowsBackgroundLocationUpdates = true
+            self.locationManager.showsBackgroundLocationIndicator = true
+        }
         
         // Since unpausing location updates is not trivial, let's always keep the location updates running
         // The distance filtering will already take care of not sending updates when not required.
