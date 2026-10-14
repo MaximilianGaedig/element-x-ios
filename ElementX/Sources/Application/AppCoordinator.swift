@@ -28,6 +28,9 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     private let userIndicatorController: UserIndicatorControllerProtocol
     
     private let appDelegate: AppDelegate
+    /// False when embedded in a host that creates Element X after launch, when background tasks can no longer be
+    /// registered (`ElementXEmbedded`).
+    private let usesBackgroundTasks: Bool
     private let appHooks: AppHooks
     private let bugReportService: BugReportServiceProtocol
     private let elementCallService: ElementCallServiceProtocol
@@ -67,7 +70,8 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     @Consumable private var storedInlineReply: (roomID: String, message: String)?
     @Consumable private var storedRoomsToAwait: Set<String>?
     
-    init(appDelegate: AppDelegate) {
+    init(appDelegate: AppDelegate, usesBackgroundTasks: Bool = true) {
+        self.usesBackgroundTasks = usesBackgroundTasks
         let appHooks = AppHooks()
         appHooks.setUp()
         
@@ -168,8 +172,10 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         observeUserSessionChanges()
         observeAppLockChanges()
         
-        registerBackgroundAppRefresh()
-        registerSearchBackfill()
+        if usesBackgroundTasks {
+            registerBackgroundAppRefresh()
+            registerSearchBackfill()
+        }
         
         appSettings.analyticsConsentStatePublisher
             .dropFirst() // Sentry is configured during init; only reconfigure when consent state actually changes
@@ -1188,7 +1194,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     
     // MARK: - Application State
     
-    private func pauseClientServices(isBackgroundTask: Bool) async {
+    func pauseClientServices(isBackgroundTask: Bool) async {
         if isBackgroundTask, UIApplication.shared.applicationState == .active {
             // Attempt to pause the background task services cleanly, only if the app not already running
             return
@@ -1198,7 +1204,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         clientProxyObserver = nil
     }
     
-    private func resumeClientServices() async {
+    func resumeClientServices() async {
         guard let userSession else { return }
         
         analyticsService.signpost.startTransaction(.upToDateRoomList)
@@ -1277,8 +1283,10 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         MXLog.info("Application did enter background")
         
         scheduleDelayedPauseServices()
-        scheduleBackgroundAppRefresh()
-        scheduleSearchBackfill()
+        if usesBackgroundTasks {
+            scheduleBackgroundAppRefresh()
+            scheduleSearchBackfill()
+        }
     }
     
     @objc
