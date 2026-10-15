@@ -115,7 +115,9 @@ struct RoomScreen: View {
                     
                     composer
                         .padding(.top, 8)
-                        .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
+                        // Telegram's input panel has no bar: its glass field and buttons float over the chat background
+                        // (ChatTextInputPanelNode's GlassBackgroundViews, 6ad963e).
+                        .background(TimelineBubbleAppearance.current == .telegram ? Color.clear.ignoresSafeArea() : Color.compound.bgCanvasDefault.ignoresSafeArea())
                         .environmentObject(timelineContext)
                         .environment(\.timelineContext, timelineContext)
                         // Make sure the reply header honours the hideTimelineMedia setting too.
