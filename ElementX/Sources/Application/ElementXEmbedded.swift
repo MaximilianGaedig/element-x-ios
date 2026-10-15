@@ -157,6 +157,11 @@ public enum ElementXEmbedded {
                     UserAgentBuilder.displayScale = displayScale
                     appCoordinator.start()
                     ElementXEmbedded.updateSync()
+                    // Screen checks from the PC: launched with ELEMENTX_OPEN_URL=<matrix.to link>, opens that room
+                    // (the route waits for the session like any deep link).
+                    if let link = ProcessInfo.processInfo.environment["ELEMENTX_OPEN_URL"], let url = URL(string: link) {
+                        ElementXEmbedded.handle(url)
+                    }
                 }
         }
     }
