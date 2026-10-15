@@ -32,7 +32,7 @@ struct TimelineView: View {
                     timelineContext.send(viewAction: .redactConfirmed(itemID: info.id, reason: reason))
                 }
             }
-            .sheet(item: $timelineContext.actionMenuInfo) { info in
+            .sheet(item: TimelineBubbleAppearance.current == .telegram ? .constant(nil) : $timelineContext.actionMenuInfo) { info in
                 let actions = TimelineItemMenuActionProvider(timelineItem: info.item,
                                                              canCurrentUserSendMessage: timelineContext.viewState.canCurrentUserSendMessage,
                                                              canCurrentUserRedactSelf: timelineContext.viewState.canCurrentUserRedactSelf,
@@ -47,6 +47,29 @@ struct TimelineView: View {
                 if let actions {
                     TimelineItemMenu(item: info.item, actions: actions)
                         .environmentObject(timelineContext)
+                }
+            }
+            .background {
+                // Telegram's message context menu (TelegramMessageContextMenu) instead of Element's sheet.
+                if TimelineBubbleAppearance.current == .telegram {
+                    TelegramContextMenuPresenter(isPresented: Binding(get: { timelineContext.actionMenuInfo != nil },
+                                                                      set: { if !$0 { timelineContext.actionMenuInfo = nil } })) {
+                        if let info = timelineContext.actionMenuInfo,
+                           let actions = TimelineItemMenuActionProvider(timelineItem: info.item,
+                                                                        canCurrentUserSendMessage: timelineContext.viewState.canCurrentUserSendMessage,
+                                                                        canCurrentUserRedactSelf: timelineContext.viewState.canCurrentUserRedactSelf,
+                                                                        canCurrentUserRedactOthers: timelineContext.viewState.canCurrentUserRedactOthers,
+                                                                        canCurrentUserPin: timelineContext.viewState.canCurrentUserPin,
+                                                                        pinnedEventIDs: timelineContext.viewState.pinnedEventIDs,
+                                                                        isViewSourceEnabled: timelineContext.viewState.isViewSourceEnabled,
+                                                                        areThreadsEnabled: timelineContext.viewState.areThreadsEnabled,
+                                                                        timelineKind: timelineContext.viewState.timelineKind,
+                                                                        emojiProvider: timelineContext.viewState.emojiProvider).makeActions() {
+                            TelegramMessageContextMenu(context: timelineContext, item: info.item, actions: actions) {
+                                timelineContext.actionMenuInfo = nil
+                            }
+                        }
+                    }
                 }
             }
             .sheet(item: $timelineContext.reactionSummaryInfo) {
