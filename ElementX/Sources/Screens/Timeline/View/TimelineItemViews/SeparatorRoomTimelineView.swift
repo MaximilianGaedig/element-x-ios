@@ -12,6 +12,18 @@ struct SeparatorRoomTimelineView: View {
     let timelineItem: SeparatorRoomTimelineItem
     
     var body: some View {
+        if TimelineBubbleAppearance.current == .telegram {
+            // ChatMessageDateHeader: the pill centred in a 34 pt row.
+            Text(timelineItem.timestamp.formattedDateSeparator())
+                .telegramDatePill()
+                .frame(maxWidth: .infinity)
+                .frame(height: 34)
+        } else {
+            elementBody
+        }
+    }
+    
+    private var elementBody: some View {
         Text(timelineItem.timestamp.formattedDateSeparator())
             .font(.compound.bodySMSemibold)
             .foregroundColor(.compound.textPrimary)

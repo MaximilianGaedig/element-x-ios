@@ -12,6 +12,19 @@ struct StateRoomTimelineView: View {
     let timelineItem: StateRoomTimelineItem
     
     var body: some View {
+        if TimelineBubbleAppearance.current == .telegram {
+            // ChatMessageActionBubbleContentNode: centred, at most the width minus 32 pt.
+            Text(timelineItem.body)
+                .telegramServiceMessage()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 4)
+                .frame(maxWidth: .infinity)
+        } else {
+            elementBody
+        }
+    }
+    
+    private var elementBody: some View {
         Text(timelineItem.body)
             .font(.compound.bodySM)
             .multilineTextAlignment(.center)

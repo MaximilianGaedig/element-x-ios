@@ -30,13 +30,13 @@ struct FloatingDateBadge: View {
         ZStack {
             if let dateText {
                 Button { onTap?() } label: {
-                    Text(dateText)
-                        .font(.compound.bodySMSemibold)
-                        .foregroundColor(.compound.textPrimary)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(backgroundColor, in: .capsule)
-                        .shadow(color: Color(red: 0.11, green: 0.11, blue: 0.13).opacity(0.1), radius: 12, x: 0, y: 4)
+                    if TimelineBubbleAppearance.current == .telegram {
+                        // Telegram's floating date is the same pill as its date headers (ChatMessageDateHeader).
+                        Text(dateText)
+                            .telegramDatePill()
+                    } else {
+                        elementLabel(dateText)
+                    }
                 }
                 .buttonStyle(.plain)
                 .disabled(onTap == nil)
@@ -44,6 +44,16 @@ struct FloatingDateBadge: View {
             }
         }
         .animation(.easeInOut(duration: 0.15).disabledDuringTests(), value: dateText)
+    }
+    
+    private func elementLabel(_ dateText: String) -> some View {
+                    Text(dateText)
+                        .font(.compound.bodySMSemibold)
+                        .foregroundColor(.compound.textPrimary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(backgroundColor, in: .capsule)
+                        .shadow(color: Color(red: 0.11, green: 0.11, blue: 0.13).opacity(0.1), radius: 12, x: 0, y: 4)
     }
 }
 
