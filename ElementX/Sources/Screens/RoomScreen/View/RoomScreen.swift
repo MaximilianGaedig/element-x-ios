@@ -34,6 +34,16 @@ struct RoomScreen: View {
         self.composerToolbar = composerToolbar
     }
     
+    /// Telegram's chat background (gradient and pattern, TelegramWallpaperView), or Element's canvas colour.
+    @ViewBuilder
+    private var timelineBackground: some View {
+        if TimelineBubbleAppearance.current == .telegram {
+            TelegramWallpaper().ignoresSafeArea()
+        } else {
+            Color.compound.bgCanvasDefault.ignoresSafeArea()
+        }
+    }
+    
     var body: some View {
         TimelineView(timelineContext: timelineContext)
             .overlay {
@@ -71,7 +81,7 @@ struct RoomScreen: View {
                 .padding()
                 .animation(.elementDefault, value: markAsReadSource)
             }
-            .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
+            .background { timelineBackground }
             .topBanners([
                 TopBannerLayer(verticalBanners: [
                     TopBannerItem(pinnedItemsBanner, isVisible: context.viewState.shouldShowPinnedEventsBanner && !isVoiceOverEnabled),

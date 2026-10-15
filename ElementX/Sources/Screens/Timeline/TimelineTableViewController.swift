@@ -196,7 +196,8 @@ class TimelineTableViewController: UIViewController {
         tableView.separatorStyle = .none
         tableView.allowsSelection = false
         tableView.keyboardDismissMode = .onDrag
-        tableView.backgroundColor = .compound.bgCanvasDefault
+        // Clear over Telegram's chat background (RoomScreen's TelegramWallpaper).
+        tableView.backgroundColor = TimelineBubbleAppearance.current == .telegram ? .clear : .compound.bgCanvasDefault
         
         // The tableview is flipped to display the newest items at the bottom.
         tableView.transform = CGAffineTransform(scaleX: 1, y: -1)

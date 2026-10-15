@@ -253,6 +253,10 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     func process(composerAction: ComposerToolbarViewModelAction) {
         switch composerAction {
         case .sendMessage(let message, let html, let mode, let intentionalMentions):
+            if TimelineBubbleAppearance.current == .telegram {
+                // Telegram steps the chat background's gradient when a message is sent (TelegramWallpaperView).
+                NotificationCenter.default.post(name: .telegramWallpaperAnimateEvent, object: nil)
+            }
             Task {
                 await sendCurrentMessage(message,
                                          html: html,
