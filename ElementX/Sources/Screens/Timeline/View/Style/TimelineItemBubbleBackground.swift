@@ -130,12 +130,16 @@ private struct TelegramBubbleFill: View {
     
     /// The gradient runs over the screen's height and each bubble shows the part where it sits. The offset is applied
     /// at render time (`visualEffect`), so it moves with the bubble without invalidating layout the way a
-    /// GeometryReader does.
+    /// GeometryReader does. The screen-tall gradient hangs off a `Color.clear` as its background, so it never sizes
+    /// anything: as a child of `.frame(maxHeight: .infinity)` without `minHeight`, the frame took the child's screen
+    /// height, the ZStack grew to it and every shape in it was drawn screen-tall over the timeline (2610151805).
     private var screenGradient: some View {
         let screenHeight = UIScreen.main.bounds.height
-        return LinearGradient(colors: TelegramBubbleTheme.outgoingGradientDark, startPoint: .top, endPoint: .bottom)
-            .frame(height: screenHeight)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        return Color.clear
+            .background(alignment: .top) {
+                LinearGradient(colors: TelegramBubbleTheme.outgoingGradientDark, startPoint: .top, endPoint: .bottom)
+                    .frame(height: screenHeight)
+            }
             .visualEffect { content, proxy in
                 content.offset(y: -proxy.frame(in: .global).minY)
             }
