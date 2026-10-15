@@ -337,6 +337,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
     
     private func updateRoomInfo(_ roomInfo: RoomInfoProxyProtocol) {
         state.roomTitle = roomInfo.displayNameOrID
+        state.roomSubtitle = roomInfo.isDM ? nil : L10n.commonMemberCount(roomInfo.joinedMembersCount)
         state.roomAvatar = roomInfo.avatar
         state.dmRecipientDetails.statusEmoji = roomInfo.statusEmoji
         state.hasOngoingCall = roomInfo.hasRoomCall

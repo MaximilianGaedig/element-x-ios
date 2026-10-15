@@ -128,11 +128,11 @@ struct RoomScreen: View {
                 }
             }
             .navigationBarBackButtonHidden(isMessageSelectionActive)
-            .toolbarRole(RoomHeaderView.toolbarRole)
+            .toolbarRole(TimelineBubbleAppearance.current == .telegram ? .automatic : RoomHeaderView.toolbarRole) // Telegram centres the title.
             .navigationTitle(L10n.screenRoomTitle) // Hidden but used for back button text.
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar }
-            .toolbarBackground(.visible, for: .navigationBar) // Fix the toolbar's background.
+            .toolbarBackground(TimelineBubbleAppearance.current == .telegram ? .hidden : .visible, for: .navigationBar) // Telegram: glass items over the wallpaper, the system edge effect under them.
             .overlay { loadingIndicator }
             .alert(item: $context.alertInfo)
             .timelineMediaPreview(viewModel: $context.mediaPreviewViewModel)
@@ -310,14 +310,14 @@ struct RoomScreen: View {
         // .principal + .primaryAction works better than .navigation leading + trailing
         // as the latter disables interaction in the action button for rooms with long names
         ToolbarItem(placement: .principal) {
-            RoomHeaderView(roomName: context.viewState.roomTitle,
-                           roomAvatar: context.viewState.roomAvatar,
-                           dmRecipientDetails: context.viewState.dmRecipientDetails,
-                           roomHistorySharingState: context.viewState.roomHistorySharingState,
-                           mediaProvider: context.mediaProvider) {
-                context.send(viewAction: .displayRoomDetails)
+            if TimelineBubbleAppearance.current == .telegram {
+                TelegramChatTitleView(title: context.viewState.roomTitle, subtitle: context.viewState.roomSubtitle) {
+                    context.send(viewAction: .displayRoomDetails)
+                }
+                .disabled(isMessageSelectionActive)
+            } else {
+                elementRoomHeader
             }
-            .disabled(isMessageSelectionActive) // The room details would cover the selection.
         }
         
         if isMessageSelectionActive {
@@ -326,7 +326,28 @@ struct RoomScreen: View {
             }
         } else {
             roomActions
+            if TimelineBubbleAppearance.current == .telegram {
+                if #available(iOS 26, *) {
+                    ToolbarSpacer(.fixed, placement: .primaryAction)
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    TelegramChatAvatarButton(avatar: context.viewState.roomAvatar, mediaProvider: context.mediaProvider) {
+                        context.send(viewAction: .displayRoomDetails)
+                    }
+                }
+            }
         }
+    }
+    
+    private var elementRoomHeader: some View {
+            RoomHeaderView(roomName: context.viewState.roomTitle,
+                           roomAvatar: context.viewState.roomAvatar,
+                           dmRecipientDetails: context.viewState.dmRecipientDetails,
+                           roomHistorySharingState: context.viewState.roomHistorySharingState,
+                           mediaProvider: context.mediaProvider) {
+                context.send(viewAction: .displayRoomDetails)
+            }
+            .disabled(isMessageSelectionActive) // The room details would cover the selection.
     }
     
     @ToolbarContentBuilder

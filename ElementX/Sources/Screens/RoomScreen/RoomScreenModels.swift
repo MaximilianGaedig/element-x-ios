@@ -41,6 +41,8 @@ enum RoomScreenViewAction {
 
 struct RoomScreenViewState: BindableState {
     var roomTitle = ""
+    /// Under the title in Telegram's header: the member count of a group (Tunes fork).
+    var roomSubtitle: String?
     var roomAvatar: RoomAvatar
     var dmRecipientDetails = RoomHeaderView.DMRecipientDetails()
     
