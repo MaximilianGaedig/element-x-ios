@@ -111,9 +111,8 @@ private struct TelegramBubbleFill: View {
         ZStack {
             if color == .compound._bgBubbleOutgoing {
                 if colorScheme == .dark {
-                    GeometryReader { geometry in
-                        shape.fill(screenGradient(frame: geometry.frame(in: .global)))
-                    }
+                    screenGradient
+                        .clipShape(shape)
                 } else {
                     shape.fill(TelegramBubbleTheme.outgoingFill)
                 }
@@ -122,20 +121,23 @@ private struct TelegramBubbleFill: View {
             } else {
                 shape.fill(color)
             }
-            // `bubbleStrokeColor`, drawn UIScreenPixel + 0.25 wide.
-            shape.stroke(TelegramBubbleTheme.stroke, lineWidth: 1 / displayScale + 0.25)
+            // `bubbleStrokeColor` (light only; Night has none), drawn UIScreenPixel + 0.25 wide.
+            if colorScheme == .light {
+                shape.stroke(TelegramBubbleTheme.stroke, lineWidth: 1 / displayScale + 0.25)
+            }
         }
     }
     
-    /// The gradient runs over the screen's height, so each bubble shows the part where it sits. It is placed when the
-    /// cell lays out; cells do not re-render while the table scrolls.
-    private func screenGradient(frame: CGRect) -> LinearGradient {
-        let screenHeight = max(frame.maxY, UIScreen.main.bounds.height)
-        guard frame.height > 0 else {
-            return LinearGradient(colors: TelegramBubbleTheme.outgoingGradientDark, startPoint: .top, endPoint: .bottom)
-        }
-        return LinearGradient(colors: TelegramBubbleTheme.outgoingGradientDark,
-                              startPoint: UnitPoint(x: 0.5, y: -frame.minY / frame.height),
-                              endPoint: UnitPoint(x: 0.5, y: (screenHeight - frame.minY) / frame.height))
+    /// The gradient runs over the screen's height and each bubble shows the part where it sits. The offset is applied
+    /// at render time (`visualEffect`), so it moves with the bubble without invalidating layout the way a
+    /// GeometryReader does.
+    private var screenGradient: some View {
+        let screenHeight = UIScreen.main.bounds.height
+        return LinearGradient(colors: TelegramBubbleTheme.outgoingGradientDark, startPoint: .top, endPoint: .bottom)
+            .frame(height: screenHeight)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .visualEffect { content, proxy in
+                content.offset(y: -proxy.frame(in: .global).minY)
+            }
     }
 }
