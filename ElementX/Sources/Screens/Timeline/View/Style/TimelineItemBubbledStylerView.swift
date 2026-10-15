@@ -224,7 +224,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
             .longPressWithFeedback(isEnabled: !isMessageSelectionActive) {
                 context.send(viewAction: .displayTimelineItemMenu(itemID: timelineItem.id))
             }
-            .swipeRightAction {
+            .swipeToReply(isOutgoing: timelineItem.isOutgoing) {
                 CompoundIcon(\.reply)
                     .foregroundColor(.compound.iconPrimary)
                     .accessibilityHidden(true)
