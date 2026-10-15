@@ -349,6 +349,11 @@ class ClientProxy: ClientProxyProtocol {
     
     private(set) lazy var imxg: ImxgAPIProtocol = ImxgAPI(client: client)
     
+    /// The SDK client, for `LocalSyncNotifier` (Tunes fork).
+    var sdkClient: ClientProtocol {
+        client
+    }
+    
     var canDeactivateAccount: Bool {
         client.canDeactivateAccount()
     }

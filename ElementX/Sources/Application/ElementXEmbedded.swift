@@ -32,6 +32,11 @@ public enum ElementXEmbedded {
     
     /// How long sync keeps running after Element X is hidden or the app goes to the background.
     public static var pauseDelay: Duration = .seconds(30)
+    
+    /// The host has no push (Tunes): new messages become local notifications from Element X's own sync, which then
+    /// keeps running while the host is alive, hidden or in the background (`pauseDelay` is not used). Set before
+    /// Element X is created.
+    public static var postsLocalNotifications = false
     private static var isVisible = false
     private static var pauseTask: Task<Void, Never>?
     
@@ -46,6 +51,8 @@ public enum ElementXEmbedded {
         _ = appDelegate.application(.shared, didFinishLaunchingWithOptions: nil)
         let hostNotificationDelegate = UNUserNotificationCenter.current().delegate
         let appCoordinator = AppCoordinator(appDelegate: appDelegate, usesBackgroundTasks: false)
+        appCoordinator.postsLocalNotifications = postsLocalNotifications
+        appCoordinator.isShownByHost = isVisible
         if let hostNotificationDelegate {
             UNUserNotificationCenter.current().delegate = hostNotificationDelegate
         }
@@ -70,12 +77,24 @@ public enum ElementXEmbedded {
     
     fileprivate static func setVisible(_ visible: Bool) {
         isVisible = visible
+        appCoordinator?.isShownByHost = visible
+        updateSync()
+    }
+    
+    /// Starts Element X and its sync without showing it, so local notifications arrive before Chat is first opened
+    /// (`postsLocalNotifications`). Does nothing once started.
+    public static func startInBackground() {
+        let appCoordinator = makeAppCoordinatorIfNeeded()
+        guard !hasStarted else { return }
+        hasStarted = true
+        UserAgentBuilder.displayScale = UITraitCollection.current.displayScale
+        appCoordinator.start()
         updateSync()
     }
     
     private static func updateSync() {
         guard let appCoordinator, hasStarted else { return }
-        let active = isVisible && UIApplication.shared.applicationState != .background
+        let active = postsLocalNotifications || (isVisible && UIApplication.shared.applicationState != .background)
         pauseTask?.cancel()
         pauseTask = nil
         if active {

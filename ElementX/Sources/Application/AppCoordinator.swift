@@ -38,6 +38,13 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     /// Common background task to continue long-running tasks in the background.
     private var backgroundTask: UIBackgroundTaskIdentifier?
     
+    /// Embedded in a host without push (Tunes): sync keeps running while the host is alive in the background, and
+    /// new messages become local notifications (`LocalSyncNotifier`) instead of APNs + the NSE.
+    var postsLocalNotifications = false
+    /// Whether the host is showing Element X; a room counts as on screen only then (embedded).
+    var isShownByHost = true
+    private var localSyncNotifier: LocalSyncNotifier?
+    
     private var backgroundRefreshSyncObserver: AnyCancellable?
     
     private var userSessionMigrationsOldVersion: Version?
@@ -893,9 +900,29 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         self.userSessionFlowCoordinator = userSessionFlowCoordinator
         
+        if postsLocalNotifications {
+            startLocalNotifications(for: userSession)
+        }
+        
         Task {
             await runPostSessionSetupTasks()
         }
+    }
+    
+    private func startLocalNotifications(for userSession: UserSessionProtocol) {
+        guard let clientProxy = userSession.clientProxy as? ClientProxy else { return }
+        let notifier = LocalSyncNotifier(userID: clientProxy.userID,
+                                         userSettings: userSession.userSettings,
+                                         client: clientProxy.sdkClient,
+                                         mediaProvider: userSession.mediaProvider) { [weak self] roomID in
+            await MainActor.run {
+                guard let self, self.isShownByHost, UIApplication.shared.applicationState == .active else { return false }
+                return self.userSessionFlowCoordinator?.isDisplayingRoomScreen(withRoomID: roomID) ?? false
+            }
+        }
+        localSyncNotifier = notifier
+        Task { await clientProxy.sdkClient.registerNotificationHandler(listener: notifier) }
+        MXLog.info("Local notifications from sync are on")
     }
     
     private func logout(isSoft: Bool) {
@@ -1282,7 +1309,11 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     private func applicationDidEnterBackground() {
         MXLog.info("Application did enter background")
         
-        scheduleDelayedPauseServices()
+        // With local notifications the host keeps sync alive in the background (Tunes plays music), so the
+        // background task's expiry must not pause it.
+        if !postsLocalNotifications {
+            scheduleDelayedPauseServices()
+        }
         if usesBackgroundTasks {
             scheduleBackgroundAppRefresh()
             scheduleSearchBackfill()
