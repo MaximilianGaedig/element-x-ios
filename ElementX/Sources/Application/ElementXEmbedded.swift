@@ -36,7 +36,22 @@ public enum ElementXEmbedded {
     /// The host has no push (Tunes): new messages become local notifications from Element X's own sync, which then
     /// keeps running while the host is alive, hidden or in the background (`pauseDelay` is not used). Set before
     /// Element X is created.
-    public static var postsLocalNotifications = false
+    public static var postsLocalNotifications = false {
+        didSet {
+            guard postsLocalNotifications != oldValue else { return }
+            appCoordinator?.postsLocalNotifications = postsLocalNotifications
+            updateSync()
+        }
+    }
+    
+    /// Whether an account is signed in, read from the keychain without creating Element X, so a host can skip
+    /// `startInBackground()` for users who never signed in.
+    public static var hasStoredSession: Bool {
+        !KeychainController(service: .sessions, accessGroup: InfoPlistReader.main.keychainAccessGroupIdentifier).restorationTokens().isEmpty
+    }
+    
+    /// Whether the host is showing Element X now.
+    public static var isShown: Bool { isVisible }
     private static var isVisible = false
     private static var pauseTask: Task<Void, Never>?
     

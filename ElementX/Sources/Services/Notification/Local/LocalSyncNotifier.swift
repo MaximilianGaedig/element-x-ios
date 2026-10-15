@@ -25,7 +25,7 @@ final nonisolated class LocalSyncNotifier: SyncNotificationListener, @unchecked 
     private let session: Session
     private let mediaProvider: MediaProviderProtocol
     private let notificationCenter: UNUserNotificationCenter
-    private let isRoomOnScreen: @Sendable (String) async -> Bool
+    private let isSuppressed: @Sendable (String) async -> Bool
     private let startDate: Date
 
     private let lock = NSLock()
@@ -37,14 +37,14 @@ final nonisolated class LocalSyncNotifier: SyncNotificationListener, @unchecked 
          client: ClientProtocol,
          mediaProvider: MediaProviderProtocol,
          notificationCenter: UNUserNotificationCenter = .current(),
-         isRoomOnScreen: @escaping @Sendable (String) async -> Bool,
+         isSuppressed: @escaping @Sendable (String) async -> Bool,
          startDate: Date = .now) {
         self.userID = userID
         self.userSettings = userSettings
         session = Session(userSettings: userSettings, client: client)
         self.mediaProvider = mediaProvider
         self.notificationCenter = notificationCenter
-        self.isRoomOnScreen = isRoomOnScreen
+        self.isSuppressed = isSuppressed
         self.startDate = startDate
     }
 
@@ -78,7 +78,8 @@ final nonisolated class LocalSyncNotifier: SyncNotificationListener, @unchecked 
     }
 
     private func post(_ item: NotificationItemProxy, eventID: String, roomID: String) async {
-        if await isRoomOnScreen(roomID) {
+        // Off in the host, or the room is on screen in the foreground.
+        if await isSuppressed(roomID) {
             return
         }
         let builder = NotificationContentBuilder(messageEventStringBuilder: RoomMessageEventStringBuilder(attributedStringBuilder: AttributedStringBuilder(mentionBuilder: PlainMentionBuilder()),

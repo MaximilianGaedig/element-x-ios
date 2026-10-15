@@ -40,7 +40,13 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     
     /// Embedded in a host without push (Tunes): sync keeps running while the host is alive in the background, and
     /// new messages become local notifications (`LocalSyncNotifier`) instead of APNs + the NSE.
-    var postsLocalNotifications = false
+    var postsLocalNotifications = false {
+        didSet {
+            if postsLocalNotifications, localSyncNotifier == nil, let userSession, userSessionFlowCoordinator != nil {
+                startLocalNotifications(for: userSession)
+            }
+        }
+    }
     /// Whether the host is showing Element X; a room counts as on screen only then (embedded).
     var isShownByHost = true
     private var localSyncNotifier: LocalSyncNotifier?
@@ -916,7 +922,8 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                                          client: clientProxy.sdkClient,
                                          mediaProvider: userSession.mediaProvider) { [weak self] roomID in
             await MainActor.run {
-                guard let self, self.isShownByHost, UIApplication.shared.applicationState == .active else { return false }
+                guard let self, self.postsLocalNotifications else { return true } // Turned off by the host.
+                guard self.isShownByHost, UIApplication.shared.applicationState == .active else { return false }
                 return self.userSessionFlowCoordinator?.isDisplayingRoomScreen(withRoomID: roomID) ?? false
             }
         }
