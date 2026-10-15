@@ -107,16 +107,18 @@ struct TimelineScrollButton: View {
                                    relativeTo: .compound.bodyLG)
             .foregroundStyle(.compound.iconPrimary)
             .padding(iconPadding)
-        if #available(iOS 26, *), TimelineBubbleAppearance.current == .telegram {
-            // Telegram's ChatHistoryNavigationButtonNode (6ad963e): a 40 pt interactive glass circle, no outline.
-            CompoundIcon(direction == .down ? \.chevronDown : \.chevronUp, size: .custom(iconSize), relativeTo: .compound.bodyLG)
-                .foregroundStyle(.compound.iconPrimary)
-                .frame(width: 40, height: 40)
-                .glassEffect(.regular.interactive(), in: Circle())
-        } else if #available(iOS 26, *) {
-            chevron
-                .glassEffect(.regular, in: Circle())
-                .overlay(Circle().stroke(Color.compound.borderInteractiveSecondary, lineWidth: 1))
+        if #available(iOS 26, *) {
+            if TimelineBubbleAppearance.current == .telegram {
+                // Telegram's ChatHistoryNavigationButtonNode (6ad963e): a 40 pt interactive glass circle, no outline.
+                CompoundIcon(direction == .down ? \.chevronDown : \.chevronUp, size: .custom(iconSize), relativeTo: .compound.bodyLG)
+                    .foregroundStyle(.compound.iconPrimary)
+                    .frame(width: 40, height: 40)
+                    .glassEffect(.regular.interactive(), in: Circle())
+            } else {
+                chevron
+                    .glassEffect(.regular, in: Circle())
+                    .overlay(Circle().stroke(Color.compound.borderInteractiveSecondary, lineWidth: 1))
+            }
         } else {
             chevron
                 .background(.regularMaterial, in: Circle())
