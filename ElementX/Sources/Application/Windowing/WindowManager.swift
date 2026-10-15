@@ -18,8 +18,11 @@ class WindowManager: SecureWindowManagerProtocol {
     private(set) var overlayWindow: UIWindow!
     private(set) var alternateWindow: UIWindow!
     
-    private(set) var openWindowAction: OpenWindowAction!
-    private(set) var dismissWindowAction: DismissWindowAction!
+    /// Set by ElementXScene. Embedded in a host app (ElementXEmbedded) there's no SwiftUI scene to open windows with:
+    /// both stay nil and secondary windows aren't opened. These were implicitly unwrapped, so leaving a room in the
+    /// embedded app (RoomFlowCoordinator.dismissFlow → closeSecondaryWindow) crashed on nil.
+    private(set) var openWindowAction: OpenWindowAction?
+    private(set) var dismissWindowAction: DismissWindowAction?
     
     var secondaryWindowsEnabled = true {
         didSet {
@@ -198,17 +201,21 @@ class WindowManager: SecureWindowManagerProtocol {
             return
         }
         
+        guard let openWindowAction else {
+            MXLog.info("Not opening a \(type) window: no window scene (embedded).")
+            return
+        }
         coordinators[type] = (coordinator, flowCoordinator)
         openWindowAction(value: type)
     }
     
     func closeSecondaryWindow(forType type: SecondaryWindowType) {
-        dismissWindowAction(value: type)
+        dismissWindowAction?(value: type)
     }
     
     func closeAllSecondaryWindows() {
         for key in coordinators.keys {
-            dismissWindowAction(value: key)
+            dismissWindowAction?(value: key)
         }
         
         coordinators.removeAll()
