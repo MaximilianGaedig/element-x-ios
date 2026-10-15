@@ -69,26 +69,8 @@ nonisolated struct TelegramBubbleShape: Shape {
     }
 
     func path(in rect: CGRect) -> Path {
-        let start = ContinuousClock.now
-        let key = TelegramBubblePathCache.Key(width: rect.width, height: rect.height, neighbors: neighbors, incoming: incoming,
-                                              drawsTail: drawsTail, maxCornerRadius: maxCornerRadius, minCornerRadius: minCornerRadius)
-        let outline: CGPath
-        let isHit: Bool
-        if let cached = TelegramBubblePathCache.shared.path(for: key) {
-            outline = cached
-            isHit = true
-        } else {
-            outline = makeOutline(width: rect.width, height: rect.height)
-            TelegramBubblePathCache.shared.store(outline, for: key)
-            isHit = false
-        }
-        TelegramBubblePathCache.shared.record(ContinuousClock.now - start, hit: isHit)
-        return Path(outline).offsetBy(dx: rect.minX, dy: rect.minY)
-    }
-    
-    /// The outline at the origin. Building it costs two CGPath boolean operations when there is a tail, so
-    /// `path(in:)` caches it by size: a timeline re-renders the same bubbles at the same sizes on every update.
-    private func makeOutline(width: CGFloat, height: CGFloat) -> CGPath {
+        let width = rect.width
+        let height = rect.height
         let radii = radii
         let limit = min(width, height) / 2
         let topLeft = min(radii.topLeft, limit)
@@ -112,9 +94,11 @@ nonisolated struct TelegramBubbleShape: Shape {
             outline = body.union(tail(width: width, height: height))
         }
 
-        guard incoming else { return outline }
-        var transform = CGAffineTransform(translationX: width, y: 0).scaledBy(x: -1, y: 1)
-        return outline.copy(using: &transform) ?? outline
+        var transform = CGAffineTransform(translationX: rect.minX, y: rect.minY)
+        if incoming {
+            transform = transform.translatedBy(x: width, y: 0).scaledBy(x: -1, y: 1)
+        }
+        return Path(outline.copy(using: &transform) ?? outline)
     }
 
     /// The tail in Telegram's 33x33 coordinates, moved to the body's bottom-right corner.
@@ -142,74 +126,5 @@ nonisolated struct TelegramBubbleShape: Shape {
                        transform: offset)
         let cutOut = CGPath(ellipseIn: topEllipse, transform: &offset)
         return filled.union(corner).subtracting(cutOut)
-    }
-}
-
-/// Bubble outlines by size, and how long `TelegramBubbleShape.path(in:)` takes (logged every 10 s while bubbles are
-/// drawn, so a slow timeline shows whether the shapes are the cause).
-nonisolated final class TelegramBubblePathCache: @unchecked Sendable {
-    static let shared = TelegramBubblePathCache()
-    
-    struct Key: Hashable {
-        let width: CGFloat
-        let height: CGFloat
-        let neighbors: TelegramBubbleNeighbors
-        let incoming: Bool
-        let drawsTail: Bool
-        let maxCornerRadius: CGFloat
-        let minCornerRadius: CGFloat
-    }
-    
-    private static let capacity = 512
-    private static let reportInterval: Duration = .seconds(10)
-    
-    private let lock = NSLock()
-    private var paths: [Key: CGPath] = [:]
-    private var hits = 0
-    private var misses = 0
-    private var hitTime: Duration = .zero
-    private var missTime: Duration = .zero
-    private var maxMissTime: Duration = .zero
-    private var lastReport = ContinuousClock.now
-    
-    func path(for key: Key) -> CGPath? {
-        lock.withLock { paths[key] }
-    }
-    
-    func store(_ path: CGPath, for key: Key) {
-        lock.withLock {
-            if paths.count >= Self.capacity { paths.removeAll(keepingCapacity: true) }
-            paths[key] = path
-        }
-    }
-    
-    func record(_ duration: Duration, hit: Bool) {
-        let report: String? = lock.withLock {
-            if hit {
-                hits += 1
-                hitTime += duration
-            } else {
-                misses += 1
-                missTime += duration
-                maxMissTime = max(maxMissTime, duration)
-            }
-            let now = ContinuousClock.now
-            guard now - lastReport >= Self.reportInterval else { return nil }
-            let line = "bubble paths: \(hits + misses) calls, \(misses) built in \(Self.ms(missTime)) ms (max \(Self.ms(maxMissTime)) ms), "
-                + "\(hits) cached in \(Self.ms(hitTime)) ms over \(Self.ms(now - lastReport)) ms"
-            hits = 0
-            misses = 0
-            hitTime = .zero
-            missTime = .zero
-            maxMissTime = .zero
-            lastReport = now
-            return line
-        }
-        if let report { MXLog.info(report) }
-    }
-    
-    private static func ms(_ duration: Duration) -> String {
-        let value = Double(duration.components.seconds) * 1000 + Double(duration.components.attoseconds) / 1e15
-        return String(format: "%.1f", value)
     }
 }
