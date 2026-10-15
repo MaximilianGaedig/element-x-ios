@@ -10,6 +10,12 @@ import Foundation
 import MatrixRustSDK
 
 nonisolated enum Tracing {
+    /// The Rust SDK's console output, which on iOS is a fmt layer writing to stderr. Embedded in a host app
+    /// (ElementXEmbedded) it is off: nobody reads the host's stderr, and when it is a pipe (an app launched over DVT
+    /// by a screen check) a full pipe blocked a tokio thread in write() while it held std's stderr lock, so the main
+    /// thread's next MXLog call waited forever and iOS killed Tunes (0x8BADF00D, build 2610151749). The log files and
+    /// the host's log sink still get every line.
+    nonisolated(unsafe) static var writesToConsole = true
     /// The directory that stores all of the log files.
     static var logsDirectory: URL {
         if ProcessInfo.isRunningIntegrationTests {
@@ -46,7 +52,7 @@ nonisolated enum Tracing {
         return .init(logLevel: level.rustLogLevel,
                      traceLogPacks: traceLogPacks.map(\.rustLogPack),
                      extraTargets: [currentTarget],
-                     writeToStdoutOrSystem: true,
+                     writeToStdoutOrSystem: writesToConsole,
                      writeToFiles: .init(path: logsDirectory.path(percentEncoded: false),
                                          filePrefix: filePrefix,
                                          fileSuffix: fileExtension,

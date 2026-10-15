@@ -43,6 +43,7 @@ public enum ElementXEmbedded {
         if let appCoordinator { return appCoordinator }
         let start = ContinuousClock.now
         defer { didCreate?(ContinuousClock.now - start) }
+        Tracing.writesToConsole = false
         _ = appDelegate.application(.shared, didFinishLaunchingWithOptions: nil)
         let hostNotificationDelegate = UNUserNotificationCenter.current().delegate
         let appCoordinator = AppCoordinator(appDelegate: appDelegate, usesBackgroundTasks: false)
