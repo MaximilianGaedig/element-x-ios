@@ -504,6 +504,10 @@ class TimelineTableViewController: UIViewController {
 extension TimelineTableViewController: UITableViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         paginatePublisher.send(())
+        // Telegram bubbles: outgoing Night bubbles move their slice of the shared gradient (TelegramBubbleBackdrop).
+        if TimelineBubbleAppearance.current == .telegram, traitCollection.userInterfaceStyle == .dark {
+            NotificationCenter.default.post(name: .telegramBubbleBackdropsNeedUpdate, object: nil)
+        }
         
         // Dispatch to fix runtime warning about making changes during a view update.
         DispatchQueue.main.async { [weak self] in

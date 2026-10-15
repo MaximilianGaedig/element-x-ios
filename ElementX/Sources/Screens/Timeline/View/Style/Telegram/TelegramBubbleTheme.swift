@@ -34,7 +34,7 @@ nonisolated enum TelegramBubbleTheme {
     static let outgoingFillLight = UIColor(tgRGB: 0xE1FFC7)
     /// Outgoing, dark: a gradient over the whole chat, top to bottom (PresentationThemeEssentialGraphics.swift
     /// `outgoingBubbleGradientImage`).
-    static let outgoingGradientDark = [Color(uiColor: UIColor(tgRGB: 0x61BCF9)), Color(uiColor: UIColor(tgRGB: 0x0088FF))]
+    static let outgoingGradientDarkColors = [UIColor(tgRGB: 0x61BCF9), UIColor(tgRGB: 0x0088FF)]
     static let outgoingFill = Color(tgLight: outgoingFillLight, dark: UIColor(tgRGB: 0x0088FF))
 
     /// Light: black at 0.2 (`bubbleStrokeColor` for `day == false`); dark: none.

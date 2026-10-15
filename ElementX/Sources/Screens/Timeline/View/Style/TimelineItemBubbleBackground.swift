@@ -47,9 +47,12 @@ private struct TimelineItemBubbleBackgroundModifier: ViewModifier {
     private func telegramBody(content: Content) -> some View {
         let neighbors = TelegramBubbleNeighbors(timelineGroupStyle)
         let shape = TelegramBubbleShape(incoming: !isOutgoing, neighbors: neighbors)
+        // Clipping is an offscreen pass per bubble, so only content that reaches the bubble's edge (media without
+        // padding) is clipped; Telegram likewise only rounds its media nodes.
+        let reachesEdge = min(insets.top, insets.leading, insets.bottom, insets.trailing) < 4
         return content
             .padding(insets)
-            .clipShape(TelegramBubbleShape(incoming: !isOutgoing, neighbors: neighbors, drawsTail: false))
+            .clipShape(reachesEdge ? AnyShape(TelegramBubbleShape(incoming: !isOutgoing, neighbors: neighbors, drawsTail: false)) : AnyShape(Rectangle()))
             .background {
                 if let color {
                     TelegramBubbleFill(shape: shape, color: color, isOutgoing: isOutgoing)
@@ -97,8 +100,9 @@ private struct TimelineItemBubbleBackgroundModifier: ViewModifier {
     }
 }
 
-/// A Telegram bubble's fill: the item's colour, except that the default outgoing fill becomes Telegram's (a gradient
-/// across the screen in dark mode, as `outgoingBubbleGradientImage`), and the default incoming fill Telegram's.
+/// A Telegram bubble's fill: the item's colour, except that the default outgoing fill becomes Telegram's (in dark
+/// mode a screen-wide gradient each bubble shows its slice of, `TelegramBubbleBackdrop`), and the default incoming
+/// fill Telegram's.
 private struct TelegramBubbleFill: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.displayScale) private var displayScale
@@ -111,8 +115,7 @@ private struct TelegramBubbleFill: View {
         ZStack {
             if color == .compound._bgBubbleOutgoing {
                 if colorScheme == .dark {
-                    screenGradient
-                        .clipShape(shape)
+                    TelegramBubbleBackdrop(shape: shape, colors: TelegramBubbleTheme.outgoingGradientDarkColors)
                 } else {
                     shape.fill(TelegramBubbleTheme.outgoingFill)
                 }
@@ -126,22 +129,5 @@ private struct TelegramBubbleFill: View {
                 shape.stroke(TelegramBubbleTheme.stroke, lineWidth: 1 / displayScale + 0.25)
             }
         }
-    }
-    
-    /// The gradient runs over the screen's height and each bubble shows the part where it sits. The offset is applied
-    /// at render time (`visualEffect`), so it moves with the bubble without invalidating layout the way a
-    /// GeometryReader does. The screen-tall gradient hangs off a `Color.clear` as its background, so it never sizes
-    /// anything: as a child of `.frame(maxHeight: .infinity)` without `minHeight`, the frame took the child's screen
-    /// height, the ZStack grew to it and every shape in it was drawn screen-tall over the timeline (2610151805).
-    private var screenGradient: some View {
-        let screenHeight = UIScreen.main.bounds.height
-        return Color.clear
-            .background(alignment: .top) {
-                LinearGradient(colors: TelegramBubbleTheme.outgoingGradientDark, startPoint: .top, endPoint: .bottom)
-                    .frame(height: screenHeight)
-            }
-            .visualEffect { content, proxy in
-                content.offset(y: -proxy.frame(in: .global).minY)
-            }
     }
 }
