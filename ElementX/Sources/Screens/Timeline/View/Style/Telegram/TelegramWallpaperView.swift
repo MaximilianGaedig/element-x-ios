@@ -36,13 +36,13 @@ struct TelegramWallpaper: UIViewRepresentable {
 }
 
 final class TelegramWallpaperView: UIView {
-    private struct Wallpaper {
+    private nonisolated struct Wallpaper {
         let colors: [UIColor]
         /// Percent; negative inverts the pattern (dark themes).
         let intensity: Int
 
-        static let day = Wallpaper(colors: [0xDBDDBB, 0x6BA587, 0xD5D88D, 0x88B884].map(UIColor.init(telegramRGB:)), intensity: 50)
-        static let night = Wallpaper(colors: [0x598BF6, 0x7A5EEF, 0xD67CFF, 0xF38B58].map(UIColor.init(telegramRGB:)), intensity: -34)
+        static let day = Wallpaper(colors: [0xDBDDBB, 0x6BA587, 0xD5D88D, 0x88B884].map { UIColor(telegramRGB: $0) }, intensity: 50)
+        static let night = Wallpaper(colors: [0x598BF6, 0x7A5EEF, 0xD67CFF, 0xF38B58].map { UIColor(telegramRGB: $0) }, intensity: -34)
     }
 
     private let gradientView: TelegramGradientBackgroundView
@@ -133,7 +133,7 @@ final class TelegramWallpaperView: UIView {
     }()
 }
 
-private extension UIColor {
+private nonisolated extension UIColor {
     convenience init(telegramRGB rgb: UInt32) {
         self.init(red: CGFloat((rgb >> 16) & 0xFF) / 255, green: CGFloat((rgb >> 8) & 0xFF) / 255, blue: CGFloat(rgb & 0xFF) / 255, alpha: 1)
     }
