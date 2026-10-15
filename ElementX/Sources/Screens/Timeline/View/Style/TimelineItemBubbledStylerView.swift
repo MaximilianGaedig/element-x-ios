@@ -300,7 +300,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
             
             content()
                 .timelineBubbleLayoutSize(.natural)
-                .cornerRadius(timelineItem.contentCornerRadius)
+                .modifier(ContentCornerModifier(timelineItem: timelineItem, groupStyle: timelineGroupStyle))
         }
     }
     
@@ -323,9 +323,34 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     }
 }
 
+/// Media corners: Telegram rounds images and videos 15 pt (7 pt towards a merged neighbour) inside a bubble inset by 2 pt
+/// (`ChatMessageItemLayoutConstants.compact.image`, 6ad963e); Element rounds them only under a reply.
+private struct ContentCornerModifier: ViewModifier {
+    let timelineItem: EventBasedTimelineItemProtocol
+    let groupStyle: TimelineGroupStyle
+    
+    func body(content: Content) -> some View {
+        if TimelineBubbleAppearance.current == .telegram, timelineItem.isTelegramMediaBubble {
+            content.clipShape(TelegramBubbleShape(maxCornerRadius: 15, minCornerRadius: 7, incoming: !timelineItem.isOutgoing,
+                                                  neighbors: TelegramBubbleNeighbors(groupStyle), drawsTail: false))
+        } else {
+            content.cornerRadius(timelineItem.contentCornerRadius)
+        }
+    }
+}
+
 private extension EventBasedTimelineItemProtocol {
+    /// Images and videos sit in a Telegram bubble with a 2 pt inset.
+    var isTelegramMediaBubble: Bool {
+        self is ImageRoomTimelineItem || self is VideoRoomTimelineItem
+    }
+    
     var bubbleBackgroundColor: Color? {
         let defaultColor: Color = isOutgoing ? .compound._bgBubbleOutgoing : .compound._bgBubbleIncoming
+        
+        if TimelineBubbleAppearance.current == .telegram, isTelegramMediaBubble {
+            return defaultColor
+        }
         
         switch self {
         case is ImageRoomTimelineItem, is VideoRoomTimelineItem:
@@ -345,6 +370,11 @@ private extension EventBasedTimelineItemProtocol {
         
         if TimelineBubbleAppearance.current == .telegram, !hasContentScanningFailure, self is TextBasedRoomTimelineItem {
             return TelegramBubbleTheme.textInsets
+        }
+        if TimelineBubbleAppearance.current == .telegram, !hasContentScanningFailure, isTelegramMediaBubble,
+           properties.replyDetails == nil, !properties.isThreaded, !hasMediaCaption {
+            // `image.bubbleInsets`: 2 pt all round (captioned media keeps Element's insets for its text).
+            return .init(around: 2)
         }
         
         // The content scanner failure placeholder is always rendered inset within the critical bubble.
