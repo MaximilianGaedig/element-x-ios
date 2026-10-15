@@ -77,11 +77,15 @@ nonisolated extension EventBasedTimelineItemProtocol {
     /// the last line, the timestamp tucks inline; otherwise it sits on a new line.
     /// Sized using the same dynamic-type-aware font as the rendered timestamp.
     var trailingReservedSize: CGSize {
-        let textStyle: UIFont.TextStyle = .caption1 // matches compound.bodyXS
+        let isTelegram = TimelineBubbleAppearance.current == .telegram
+        let textStyle: UIFont.TextStyle = isTelegram ? .caption2 : .caption1 // matches the label's font
         let font = UIFont.preferredFont(forTextStyle: textStyle)
         let textSize = (localizedSendInfo as NSString).size(withAttributes: [.font: font])
         var width = textSize.width
         var height = textSize.height
+        if isTelegram, isOutgoing, !hasStatusIcon {
+            width += TelegramBubbleTheme.statusSpacing + TelegramBubbleTheme.statusWidth
+        }
         if hasStatusIcon {
             // CompoundIcon at .xSmall is 16pt at the base size; scale with the same UIFontMetrics
             // as the icon's `relativeTo: .compound.bodyXS` modifier, plus the 4pt HStack spacing.

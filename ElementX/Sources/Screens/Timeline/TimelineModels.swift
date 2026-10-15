@@ -344,6 +344,20 @@ struct TimelineState {
         }?.key
     }
     
+    /// The newest item someone else has read (Tunes fork): it and every item before it get Telegram's two checks.
+    /// Set with ``itemsDictionary`` by `TimelineViewModel.buildTimelineViews`.
+    var readByOthersUniqueID: TimelineItemIdentifier.UniqueID?
+    
+    /// Whether someone else has read this item or a later one.
+    func isReadByOthers(_ uniqueID: TimelineItemIdentifier.UniqueID) -> Bool {
+        guard let readByOthersUniqueID,
+              let readIndex = itemsDictionary.index(forKey: readByOthersUniqueID),
+              let index = itemsDictionary.index(forKey: uniqueID) else {
+            return false
+        }
+        return index <= readIndex
+    }
+    
     func hasLoadedItem(with eventID: String) -> Bool {
         itemViewStates.contains { $0.identifier.eventID == eventID }
     }

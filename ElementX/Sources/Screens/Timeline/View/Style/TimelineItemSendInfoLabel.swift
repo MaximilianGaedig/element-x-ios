@@ -17,7 +17,8 @@ extension View {
                               context: TimelineViewModel.Context) -> some View {
         modifier(TimelineItemSendInfoModifier(sendInfo: .init(timelineItem: timelineItem,
                                                               adjustedDeliveryStatus: adjustedDeliveryStatus,
-                                                              hasContentScanningFailure: hasContentScanningFailure),
+                                                              hasContentScanningFailure: hasContentScanningFailure,
+                                                              isReadByOthers: context.viewState.timelineState.isReadByOthers(timelineItem.id.uniqueID)),
                                               // A gallery announces this when entering it instead.
                                               isAccessibilityHidden: timelineItem is GalleryRoomTimelineItem,
                                               context: context))
@@ -88,7 +89,7 @@ private struct TimelineItemSendInfoLabel: View {
             content
                 .padding(.horizontal, 4)
                 .padding(.vertical, 2)
-                .background(Color.compound.bgSubtleSecondary)
+                .background(TimelineBubbleAppearance.current == .telegram ? TelegramBubbleTheme.mediaStatusFill : Color.compound.bgSubtleSecondary)
                 .cornerRadius(10)
                 .padding(.trailing, 4)
                 .padding(.bottom, 4)
@@ -105,7 +106,45 @@ private struct TimelineItemSendInfoLabel: View {
         }
     }
     
+    @ViewBuilder
     var content: some View {
+        if TimelineBubbleAppearance.current == .telegram {
+            telegramContent
+        } else {
+            elementContent
+        }
+    }
+    
+    /// Telegram iOS's date and status (ChatMessageDateAndStatusNode.swift, 6ad963e): the time at 11 pt in the
+    /// bubble's secondary colour, then the clock or checks for outgoing messages. Problems keep Element's icon.
+    var telegramContent: some View {
+        HStack(alignment: .top, spacing: 0) {
+            Text(sendInfo.localizedString)
+                .font(.caption2)
+                .foregroundStyle(telegramForegroundStyle)
+            
+            if let statusIcon {
+                CompoundIcon(statusIcon, size: .xSmall, relativeTo: .caption2)
+                    .foregroundStyle(sendInfo.foregroundStyle)
+                    .padding(.leading, 4)
+                    .accessibilityLabel(statusIconAccessibilityLabel ?? "")
+                    .accessibilityHidden(statusIconAccessibilityLabel == nil)
+            } else if let telegramStatus = sendInfo.telegramStatus {
+                TelegramMessageStatusView(status: telegramStatus,
+                                          checkColor: sendInfo.isOnMedia ? TelegramBubbleTheme.mediaStatusText : TelegramBubbleTheme.outgoingCheck,
+                                          pendingColor: sendInfo.isOnMedia ? TelegramBubbleTheme.mediaStatusText : TelegramBubbleTheme.outgoingPending)
+            }
+        }
+    }
+    
+    private var telegramForegroundStyle: Color {
+        if sendInfo.isOnMedia {
+            return TelegramBubbleTheme.mediaStatusText
+        }
+        return TelegramBubbleTheme.secondaryText(isOutgoing: sendInfo.isOutgoing)
+    }
+    
+    var elementContent: some View {
         HStack(spacing: 4) {
             Text(sendInfo.localizedString)
             
@@ -140,6 +179,15 @@ private struct TimelineItemSendInfo {
     let localizedString: String
     var status: Status?
     let layoutType: LayoutType
+    var isOutgoing = false
+    /// Telegram's clock or checks, for outgoing messages without a problem to show.
+    var telegramStatus: TelegramMessageStatus?
+    
+    /// Drawn on a dark capsule over media, in white like Telegram's `mediaDateAndStatusTextColor`.
+    var isOnMedia: Bool {
+        if case .overlay(capsuleStyle: true) = layoutType { return true }
+        return false
+    }
     
     var foregroundStyle: Color {
         switch status {
@@ -158,9 +206,20 @@ private struct TimelineItemSendInfo {
 private extension TimelineItemSendInfo {
     init(timelineItem: EventBasedTimelineItemProtocol,
          adjustedDeliveryStatus: TimelineItemDeliveryStatus?,
-         hasContentScanningFailure: Bool = false) {
+         hasContentScanningFailure: Bool = false,
+         isReadByOthers: Bool = false) {
         itemID = timelineItem.id
         localizedString = timelineItem.localizedSendInfo
+        isOutgoing = timelineItem.isOutgoing
+        telegramStatus = if !timelineItem.isOutgoing {
+            nil
+        } else {
+            switch adjustedDeliveryStatus {
+            case .sending: .sending
+            case .sendingFailed: nil
+            case .sent, .none: isReadByOthers ? .read : .sent
+            }
+        }
         
         status = if case .sendingFailed = adjustedDeliveryStatus {
             .sendingFailed

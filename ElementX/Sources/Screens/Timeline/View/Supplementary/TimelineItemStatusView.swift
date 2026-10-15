@@ -36,6 +36,16 @@ struct TimelineItemStatusView: View {
     
     @ViewBuilder
     var deliveryStatusBadge: some View {
+        if TimelineBubbleAppearance.current == .telegram {
+            // The clock and checks are inside the bubble, next to the time.
+            EmptyView()
+        } else {
+            elementDeliveryStatusBadge
+        }
+    }
+    
+    @ViewBuilder
+    private var elementDeliveryStatusBadge: some View {
         switch adjustedDeliveryStatus {
         case .sending:
             TimelineDeliveryStatusView(deliveryStatus: .sending)

@@ -58,7 +58,11 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     /// The base padding applied to bubbles on either side.
     ///
     /// **Note:** This is on top of the insets applied to the cells by the table view.
-    private let bubbleHorizontalPadding: CGFloat = 8
+    /// Telegram: `edgeInset` (3) plus the tail (6) from the screen edge to the body, with the cell's 8.
+    private let bubbleHorizontalPadding: CGFloat = TimelineBubbleAppearance.current == .telegram ? 1 : 8
+    /// The gap on the side opposite the sender. Telegram: bubbles are at most `width - 36` wide (`ChatMessageItemWidthFill`),
+    /// so 33 from the screen edge.
+    private let oppositeSidePadding: CGFloat = TimelineBubbleAppearance.current == .telegram ? 24 : 48
     /// Additional padding applied to outgoing bubbles when the avatar is shown
     private var bubbleAvatarPadding: CGFloat {
         guard !timelineItem.isOutgoing, !isDM else { return 0 }
@@ -119,7 +123,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
                         
                         messageBubbleWithReactions
                     }
-                    .padding(timelineItem.isOutgoing ? .leading : .trailing, 48) // Additional padding to differentiate alignment.
+                    .padding(timelineItem.isOutgoing ? .leading : .trailing, oppositeSidePadding) // Additional padding to differentiate alignment.
                     
                     HStack(spacing: 0) {
                         if !timelineItem.isOutgoing {
@@ -338,6 +342,10 @@ private extension EventBasedTimelineItemProtocol {
     /// Padding affecting just the "send info" should be added inside `TimelineItemSendInfoView`
     func bubbleInsets(hasContentScanningFailure: Bool) -> EdgeInsets {
         let defaultInsets: EdgeInsets = .init(around: 8)
+        
+        if TimelineBubbleAppearance.current == .telegram, !hasContentScanningFailure, self is TextBasedRoomTimelineItem {
+            return TelegramBubbleTheme.textInsets
+        }
         
         // The content scanner failure placeholder is always rendered inset within the critical bubble.
         if hasContentScanningFailure {

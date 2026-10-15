@@ -35,6 +35,34 @@ private struct TimelineItemBubbleBackgroundModifier: ViewModifier {
     var borderColor: Color?
     
     func body(content: Content) -> some View {
+        if TimelineBubbleAppearance.current == .telegram {
+            telegramBody(content: content)
+        } else {
+            elementBody(content: content)
+        }
+    }
+    
+    /// Telegram iOS bubbles: the shape and tail from `TelegramBubbleShape`, a hairline outline in light mode, and
+    /// the content clipped to the body (media keeps the corners but not the tail).
+    private func telegramBody(content: Content) -> some View {
+        let neighbors = TelegramBubbleNeighbors(timelineGroupStyle)
+        let shape = TelegramBubbleShape(incoming: !isOutgoing, neighbors: neighbors)
+        return content
+            .padding(insets)
+            .clipShape(TelegramBubbleShape(incoming: !isOutgoing, neighbors: neighbors, drawsTail: false))
+            .background {
+                if let color {
+                    TelegramBubbleFill(shape: shape, color: color, isOutgoing: isOutgoing)
+                }
+            }
+            .overlay {
+                if let borderColor {
+                    shape.stroke(borderColor)
+                }
+            }
+    }
+    
+    private func elementBody(content: Content) -> some View {
         content
             .padding(insets)
             .background(color)
@@ -66,5 +94,48 @@ private struct TimelineItemBubbleBackgroundModifier: ViewModifier {
                 return [.topRight, .bottomLeft, .bottomRight]
             }
         }
+    }
+}
+
+/// A Telegram bubble's fill: the item's colour, except that the default outgoing fill becomes Telegram's (a gradient
+/// across the screen in dark mode, as `outgoingBubbleGradientImage`), and the default incoming fill Telegram's.
+private struct TelegramBubbleFill: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.displayScale) private var displayScale
+    
+    let shape: TelegramBubbleShape
+    let color: Color
+    let isOutgoing: Bool
+    
+    var body: some View {
+        ZStack {
+            if color == .compound._bgBubbleOutgoing {
+                if colorScheme == .dark {
+                    GeometryReader { geometry in
+                        shape.fill(screenGradient(frame: geometry.frame(in: .global)))
+                    }
+                } else {
+                    shape.fill(TelegramBubbleTheme.outgoingFill)
+                }
+            } else if color == .compound._bgBubbleIncoming {
+                shape.fill(TelegramBubbleTheme.incomingFill)
+            } else {
+                shape.fill(color)
+            }
+            // `bubbleStrokeColor`, drawn UIScreenPixel + 0.25 wide.
+            shape.stroke(TelegramBubbleTheme.stroke, lineWidth: 1 / displayScale + 0.25)
+        }
+    }
+    
+    /// The gradient runs over the screen's height, so each bubble shows the part where it sits. It is placed when the
+    /// cell lays out; cells do not re-render while the table scrolls.
+    private func screenGradient(frame: CGRect) -> LinearGradient {
+        let screenHeight = max(frame.maxY, UIScreen.main.bounds.height)
+        guard frame.height > 0 else {
+            return LinearGradient(colors: TelegramBubbleTheme.outgoingGradientDark, startPoint: .top, endPoint: .bottom)
+        }
+        return LinearGradient(colors: TelegramBubbleTheme.outgoingGradientDark,
+                              startPoint: UnitPoint(x: 0.5, y: -frame.minY / frame.height),
+                              endPoint: UnitPoint(x: 0.5, y: (screenHeight - frame.minY) / frame.height))
     }
 }

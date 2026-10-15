@@ -92,9 +92,9 @@ final class TimelineViewModelTests {
         let timelineController = TimelineControllerMock(.init(timelineItems: items))
         let viewModel = makeViewModel(timelineController: timelineController)
         
-        // Then the first message should not be grouped but the other two should.
-        #expect(viewModel.state.timelineState.itemViewStates[0].groupStyle == .single, "When the first message has reactions it should not be grouped.")
-        #expect(viewModel.state.timelineState.itemViewStates[1].groupStyle == .first, "A new group should be made when the preceding message has reactions.")
+        // Then reactions do not split the group (Telegram iOS merging, Tunes fork).
+        #expect(viewModel.state.timelineState.itemViewStates[0].groupStyle == .first, "Reactions should not split a group.")
+        #expect(viewModel.state.timelineState.itemViewStates[1].groupStyle == .middle, "Reactions should not split a group.")
         #expect(viewModel.state.timelineState.itemViewStates[2].groupStyle == .last, "Nothing should prevent the last message from being grouped.")
     }
     
@@ -115,10 +115,10 @@ final class TimelineViewModelTests {
         let timelineController = TimelineControllerMock(.init(timelineItems: items))
         let viewModel = makeViewModel(timelineController: timelineController)
         
-        // Then the first and second messages should be grouped and the last one should not.
+        // Then reactions do not split the group (Telegram iOS merging, Tunes fork).
         #expect(viewModel.state.timelineState.itemViewStates[0].groupStyle == .first, "Nothing should prevent the first message from being grouped.")
-        #expect(viewModel.state.timelineState.itemViewStates[1].groupStyle == .last, "When the message has reactions, the group should end here.")
-        #expect(viewModel.state.timelineState.itemViewStates[2].groupStyle == .single, "The last message should not be grouped when the preceding message has reactions.")
+        #expect(viewModel.state.timelineState.itemViewStates[1].groupStyle == .middle, "Reactions should not split a group.")
+        #expect(viewModel.state.timelineState.itemViewStates[2].groupStyle == .last, "Reactions should not split a group.")
     }
     
     @Test

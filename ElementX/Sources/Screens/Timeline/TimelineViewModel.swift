@@ -942,6 +942,10 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         
         state.timelineState.itemsDictionary = timelineItemsDictionary
         state.timelineState.recomputeReadMarkerUniqueID()
+        let ownUserID = roomProxy.ownUserID
+        state.timelineState.readByOthersUniqueID = timelineItems.last { item in
+            (item as? EventBasedTimelineItemProtocol)?.properties.orderedReadReceipts.contains { $0.userID != ownUserID } ?? false
+        }?.id.uniqueID
     }
     
     private func updateViewState(item: RoomTimelineItemProtocol, groupStyle: TimelineGroupStyle) -> RoomTimelineItemViewState {
@@ -967,6 +971,13 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         // State events aren't rendered as messages so shouldn't be grouped.
         if eventTimelineItem is StateRoomTimelineItem || otherEventTimelineItem is StateRoomTimelineItem {
             return false
+        }
+        
+        if TimelineBubbleAppearance.current == .telegram {
+            // Telegram iOS `messagesShouldBeMerged` (ChatMessageItemImpl.swift, 6ad963e): the same author within
+            // 10 minutes either way; reactions do not split a group.
+            return eventTimelineItem.sender == otherEventTimelineItem.sender
+                && abs(otherEventTimelineItem.timestamp.timeIntervalSince(eventTimelineItem.timestamp)) < 10 * 60
         }
         
         return eventTimelineItem.sender == otherEventTimelineItem.sender
